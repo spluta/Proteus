@@ -52,7 +52,7 @@ code::
         b = Buffer.read(s, p);
 
         SynthDef('proteus_test', {
-            var in = PlayBuf.ar(1, \buf_num.kr(0), loop:1);
+            var in = PlayBuf.ar(1, \buf_num.kr(0), BufRateScale.kr(\buf_dur.kr), loop:1);
             Out.ar(0,
                 Proteus.ar(in, SinOsc.ar(0.1).range(0,1), 'this_one', \bypass.kr(0));
             );
@@ -63,6 +63,8 @@ code::
 ~synth = Synth('proteus_test', [\buf_num, b]);
 
 //you need to download the Proteus models from the GuitarML website:
+
+//load the model after the synth is running
 
 Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/WamplerThirtySomething15BoostON.json")
 

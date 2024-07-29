@@ -80,18 +80,17 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
     out_temp = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
 
     int error;
-    src_state.reset (src_new (2, 1, &error));
+    src_state.reset (src_new (SRC_SINC_MEDIUM_QUALITY, 1, &error));
     src_set_ratio (src_state.get(), m_ratio);
 
     int error_out;
-    src_state_out.reset (src_new (2, 1, &error_out));
+    src_state_out.reset (src_new (SRC_SINC_MEDIUM_QUALITY, 1, &error_out));
     src_set_ratio (src_state_out.get(), 1./m_ratio);
 
-    //only need this for the 2 input case
-    int error1;
-    src_state1.reset (src_new (2, 2, &error1));
-    src_set_ratio (src_state1.get(), m_ratio);
-
+    // //only need this for the 2 input case
+    // int error1;
+    // src_state1.reset (src_new (2, 2, &error1));
+    // src_set_ratio (src_state1.get(), m_ratio);
 
     mCalcFunc = make_calc_function<Proteus, &Proteus::next_a>();
     next_a(1);

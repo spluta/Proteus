@@ -40,9 +40,8 @@ private:
   std::unique_ptr<SRC_STATE, decltype (&src_delete)> src_state { nullptr, &src_delete };
   std::unique_ptr<SRC_STATE, decltype (&src_delete)> src_state_out { nullptr, &src_delete };
 
-  
-
-  std::unique_ptr<SRC_STATE, decltype (&src_delete)> src_state1 { nullptr, &src_delete };
+  //not using this one right now
+  //std::unique_ptr<SRC_STATE, decltype (&src_delete)> src_state1 { nullptr, &src_delete };
 
   enum InputParams { In0, In1, Bypass, NumInputParams };
   enum Outputs { Out1, NumOutputParams };
