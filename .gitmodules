@@ -1,0 +1,6 @@
+[submodule "libsamplerate"]
+	path = libsamplerate
+	url = https://github.com/libsndfile/libsamplerate.git
+[submodule "RTNeural"]
+	path = RTNeural
+	url = https://github.com/jatinchowdhury18/RTNeural.git
