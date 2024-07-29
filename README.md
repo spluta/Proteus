@@ -9,7 +9,11 @@ The project uses the RTNeural library by Jatin Chowdhury of ChowDSP and libsampl
 
 Installation:
 
-If you can, you probably want to use one of the pre-build binaries available on GitHub. On mac you will need to 
+If you can, you probably want to use one of the pre-build binaries available on GitHub. On mac you will need to also need to clear the attributes so the OS doesn't think the file is trash:
+
+```
+xattr -cr <path to the plugin directory>
+```
 
 Building:
 
