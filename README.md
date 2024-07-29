@@ -20,22 +20,40 @@ Building:
 git submodule update --init --recursive
 ```
 
-3. Build libsamplerate:
+3. Build libsamplerate in release mode (from the libsamplerate submodule directory):
 ```
-cd libsamplerate
 mkdir build
 cd build
-cmake -DBUILD_SHARED_LIBS=ON ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
+
+for a mac universal build you have to build the library universal as well:
+```
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' ..
+make
+```
+
 
 4. Build the Plugin (from the Proteus main directory):
 ```
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DSC_PATH=<PATH TO SC SOURCE> 
+cmake -DCMAKE_BUILD_TYPE=Release -DSC_PATH=<PATH TO SC SOURCE> ..
 cmake --build . --config Release
 ```
+
+for a mac universal build:
+```
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DSC_PATH=<PATH TO SC SOURCE> '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' ..
+cmake --build . --config Release
+```
+
+
 
 It should build Proteus plugin and leave the .scx file in the build directory
 

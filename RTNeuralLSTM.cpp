@@ -96,6 +96,16 @@ void RT_LSTM::process(const float* inData, const float* param, float* outData, i
     }
 }
 
+//version with kr input for second value
+void RT_LSTM::process(const float* inData, const float param, float* outData, int numSamples)
+{
+    for (int i = 0; i < numSamples; ++i) {
+        inArray1[0] = inData[i];
+        inArray1[1] = param;
+        outData[i] = model_cond1.forward(inArray1) + inData[i];
+    }
+}
+
 void RT_LSTM::process(const float* inData, const float* param1, const float* param2, float* outData, int numSamples)
 {
     for (int i = 0; i < numSamples; ++i) {

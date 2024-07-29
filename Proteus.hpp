@@ -52,7 +52,7 @@ private:
 
   int out_temp_size{128};
   float *in_rs;
-  float *in1_rs;
+  // float *in1_rs;
   float *out_temp;
 
   double m_ratio{1.0};

@@ -15,6 +15,7 @@ public:
 
     void process(const float* inData, float* outData, int numSamples);
     void process(const float* inData, const float* param, float* outData, int numSamples);
+    void process(const float* inData, const float param, float* outData, int numSamples);
     void process(const float* inData, const float* param1, const float* param2, float* outData, int numSamples);
 
     int input_size = 1;

@@ -31,23 +31,23 @@ size_t Proteus::resample (const float* input, float* output, size_t numSamples) 
     return (size_t) src_data.output_frames_gen;
 }
 
-size_t Proteus::resample_1 (const float* input, float* output, size_t numSamples) noexcept
-{
-    SRC_DATA src_data {
-        input, // data_in
-        output, // data_out
-        (int) numSamples, // input_frames
-        int ((double) numSamples * m_ratio) + 1, // output_frames
-        0, // input_frames_used
-        0, // output_frames_gen
-        0, // end_of_input
-        m_ratio // src_ratio
-    };
+// size_t Proteus::resample_1 (const float* input, float* output, size_t numSamples) noexcept
+// {
+//     SRC_DATA src_data {
+//         input, // data_in
+//         output, // data_out
+//         (int) numSamples, // input_frames
+//         int ((double) numSamples * m_ratio) + 1, // output_frames
+//         0, // input_frames_used
+//         0, // output_frames_gen
+//         0, // end_of_input
+//         m_ratio // src_ratio
+//     };
 
-    src_process (src_state.get(), &src_data);
+//     src_process (src_state.get(), &src_data);
 
-    return (size_t) src_data.output_frames_gen;
-}
+//     return (size_t) src_data.output_frames_gen;
+// }
 
 size_t Proteus::resample_out (const float* input, float* output, size_t inSamples, size_t outSamples) noexcept
 {
@@ -76,7 +76,7 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
     out_temp_size = int(44100./controlRate())+2; //an extra one for safety
 
     in_rs = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
-    in1_rs = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
+    //in1_rs = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
     out_temp = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
 
     int error;
@@ -98,7 +98,7 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
   }
   Proteus::~Proteus() {
     RTFree(mWorld, in_rs);
-    RTFree(mWorld, in1_rs);
+    //RTFree(mWorld, in1_rs);
     RTFree(mWorld, out_temp);
   }
 
@@ -123,7 +123,7 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
   void Proteus::next_a(int nSamples)
   {
     const float *in_0 = in(In0);
-    const float *in_1 = in(In1);
+    const float in_1 = in0(In1);
     const float bypass = in0(Bypass);
     float *outbuf = out(Out1);
 
@@ -141,13 +141,13 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
             break;
           }
           case 2: {
-            int temp = resample_1 (in_1, in1_rs, nSamples);
-            //bad hack to make sure the second input is the same size as the first
-            //probably need to use libsamplerate callback interface, but I'm not that smart
-            if (temp < block44k_size) {
-              in1_rs[block44k_size-1] = in1_rs[block44k_size-2];
-            }
-            LSTM.process(in_rs, in1_rs, out_temp, block44k_size);
+            // int temp = resample_1 (in_1, in1_rs, nSamples);
+            // //bad hack to make sure the second input is the same size as the first
+            // //probably need to use libsamplerate callback interface, but I'm not that smart
+            // if (temp < block44k_size) {
+            //   in1_rs[block44k_size-1] = in1_rs[block44k_size-2];
+            // }
+            LSTM.process(in_rs, in_1, out_temp, block44k_size);
             break;
           }
           //so far there are no models that use 3 inputs

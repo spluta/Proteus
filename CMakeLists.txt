@@ -22,7 +22,7 @@ add_library(Proteus MODULE Proteus.cpp)
 add_subdirectory(RTNeural)
 
 # this is the location of libsamplerate.dylib, which you need to download and build separately
-target_link_libraries(Proteus ${CMAKE_CURRENT_SOURCE_DIR}/libsamplerate/build/src/libsamplerate.dylib)
+target_link_libraries(Proteus ${CMAKE_CURRENT_SOURCE_DIR}/libsamplerate/build/src/libsamplerate.a)
 target_link_libraries(Proteus RTNeural)
 target_link_libraries(Proteus nlohmann_json::nlohmann_json)
 

@@ -1,0 +1,78 @@
+TITLE:: Proteus
+summary:: Amp and Pedal Neural Emulator
+categories:: UGens>Distortion
+
+
+DESCRIPTION::
+This is a SuperCollider UGen implementation of the Proteus VST plugin by GuitarML, aka Keith Bloemer. The LSTM inference algorithms are modefied from the Proteus source: https://github.com/GuitarML/Proteus and this implementation is largely modeled on his excellent project. Go download the VST!
+
+The Proteus models are all trained at 44.1k, but this plugin will operate at any sample rate. 
+
+CLASSMETHODS::
+
+METHOD:: ar
+
+ARGUMENT:: in0
+the first input - usually audio
+
+ARGUMENT:: in1
+the second input - only an option in some models. this is usually mapped to a knob on the original pedal. this is interpretted as a control rate signal.
+
+ARGUMENT:: id
+each Proteus UGen in a Synth needs a unique id
+
+ARGUMENT:: bypass
+bypass the effect - audio goes straight out
+
+ARGUMENT:: mul
+
+ARGUMENT:: add
+
+METHOD:: loadModel
+loads pretrained Proteus model weights into the Neural Network from a json file. see the GuitarML website for available models.
+
+ARGUMENT:: synth
+the synth where the UGen exists
+
+ARGUMENT:: id
+the id for the UGen where you are loading the model
+
+ARGUMENT:: path
+path to the json file training
+
+
+EXAMPLES::
+
+code::
+//add your SynthDef
+
+(
+    s.waitForBoot({
+        p = Platform.resourceDir +/+ "sounds/a11wlk01.wav";
+        b = Buffer.read(s, p);
+
+        SynthDef('proteus_test', {
+            var in = PlayBuf.ar(1, \buf_num.kr(0), loop:1);
+            Out.ar(0,
+                Proteus.ar(in, SinOsc.ar(0.1).range(0,1), 'this_one', \bypass.kr(0));
+            );
+        }).load(s);
+    })
+)
+
+~synth = Synth('proteus_test', [\buf_num, b]);
+
+//you need to download the Proteus models from the GuitarML website:
+
+Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/WamplerThirtySomething15BoostON.json")
+
+Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/JoyoExtremeMetal.json")
+
+//one can bypass the model or engage it
+~synth.set(\bypass, 1);
+~synth.set(\bypass, 0);
+
+Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/AmpPack3/Fender_Bassman_JC.json")
+
+
+::
