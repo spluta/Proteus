@@ -1,14 +1,12 @@
 Proteus : UGen {
 	var <>id, <>desc;
 	*ar { |in0=0, in1=0, id, bypass=0, mul = 1, add = 0|
-		//[in0, in1, in2, id, oversample].postln;
 		if(in0.rate!='audio'){in0 = K2A.ar(in0)};
 
 		^this.multiNew('audio', id, in0, in1, bypass).madd(mul, add);
 	}
 
 	init { arg ... theInputs;
-		"init".postln;
 		this.id = theInputs[0];
 		theInputs.postln;
 		// store the inputs as an array
@@ -31,10 +29,9 @@ Proteus : UGen {
 			"SynthDef has no metadata.\n".error;
 		};
 
-		['/u_cmd', synth.nodeID, synthIndex, '/open', path].postln;
-
-		synth.server.sendMsg('/u_cmd', synth.nodeID, synthIndex, 'load_model', path);
-		// .sendMsg('/u_cmd', ~synth.nodeID, 5, '/open', "FabFilter Pro-R 2.vst3", 1, 0, 0)
+		synthIndex.do{|index|
+			synth.server.sendMsg('/u_cmd', synth.nodeID, index, 'load_model', path);
+		}
 	}
 
 	checkInputs {
@@ -43,24 +40,37 @@ Proteus : UGen {
 	}
 
 	optimizeGraph {
-		// This is called exactly once during SynthDef construction!
+		// This is called once per UGen during SynthDef construction!
 		var metadata;
 		// For older SC versions, where metadata might be 'nil'
 		this.synthDef.metadata ?? { this.synthDef.metadata = () };
-		// Add proteus metadata entry if needed:
+		
+		
 		metadata = this.synthDef.metadata[this.synthDef.name];
-		metadata ?? {
+		if (metadata == nil) {
+			// Add proteus metadata entry if needed:
 			metadata = ();
 			this.synthDef.metadata[this.synthDef.name] = metadata;
+			this.desc = ();
+			this.desc[\index] = [this.synthIndex];
+		}{
+			//if the metadata already existed, that means there are multiple UGens with the same id
+			
+			this.desc = ();
+			if (metadata[this.id.asSymbol]==nil){
+				//if the id info is not there, it is an additional id
+				this.desc[\index] = [this.synthIndex];
+			}{
+				//if the symbol is there, it is probably multichannel expansion
+				//so we load all the indexes into an array so we can set them all at once
+				this.desc[\index] = (metadata[this.id.asSymbol][\index].add(this.synthIndex));
+			};
 		};
-		// Make plugin description and add to metadata:
-		this.desc = ();
-		this.desc[\index] = this.synthIndex ;
 
 		this.id.notNil.if {
 			metadata.put(this.id, this.desc);
 		}{
 			Error("Each Proteus instance in a Synth must have a unique ID.").throw;
-		}
+		};
 	}
 }

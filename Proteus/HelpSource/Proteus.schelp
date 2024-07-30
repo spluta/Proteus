@@ -76,5 +76,38 @@ Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Pack
 
 Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/AmpPack3/Fender_Bassman_JC.json")
 
+///--------------
+
+//the same id should work when using multichannel expansion
+SynthDef('proteus_multichannel', {
+    var in = PlayBuf.ar(1, \buf_num.kr(0), BufRateScale.kr(\buf_dur.kr), loop:1);
+    Out.ar(0,
+        Proteus.ar(in.dup, 0, \these_two, \bypass.kr(0));
+    );
+}).load(s);
+
+~synth = Synth('proteus_multichannel', [\buf_num, b]);
+
+//this will set both the left and right channels of audio
+Proteus.loadModel(~synth, \these_two, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/JoyoExtremeMetal.json")
+
+///--------------
+
+//multiple ids in the same SynthDef will work as well
+SynthDef('proteus_multi_ugen', {
+    var in = PlayBuf.ar(1, \buf_num.kr(0), BufRateScale.kr(\buf_dur.kr), loop:1);
+    var amp = Proteus.ar(in, 0, \first_one, \bypass.kr(0));
+    var amp2 = Proteus.ar(in, 0, \second_one, \bypass.kr(0));
+    Out.ar(0,
+        [amp, amp2]
+    );
+}).load(s);
+
+~synth = Synth('proteus_multi_ugen', [\buf_num, b]);
+
+Proteus.loadModel(~synth, \first_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/JoyoExtremeMetal.json")
+Proteus.loadModel(~synth, \second_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/JoyoExtremeMetal.json")
+
+
 
 ::

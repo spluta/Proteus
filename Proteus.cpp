@@ -79,6 +79,9 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
     //in1_rs = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
     out_temp = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
 
+
+    //setting these to medium quality sample rate conversion
+    //probably could be "fastest"
     int error;
     src_state.reset (src_new (SRC_SINC_MEDIUM_QUALITY, 1, &error));
     src_set_ratio (src_state.get(), m_ratio);
