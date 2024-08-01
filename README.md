@@ -25,10 +25,11 @@ git submodule update --init --recursive
 ```
 
 3. Build libsamplerate in release mode (from the libsamplerate submodule directory):
+(setting BUILD_TESTING to FALSE disables testing that makes it look like it didn't build correctly when it did)
 ```
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=FALSE ..
 make
 ```
 
@@ -36,7 +37,7 @@ for a mac universal build you have to build the library universal as well:
 ```
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' ..
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=FALSE '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64' ..
 make
 ```
 
