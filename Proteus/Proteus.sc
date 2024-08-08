@@ -18,7 +18,7 @@ Proteus : UGen {
 		var defName = synth.defName.asSymbol;
 		var synthIndex = SynthDescLib.global[defName];
 		
-		if (synthIndex != nil) {
+		if (synthIndex.notNil) {
 			synthIndex=synthIndex.metadata()[defName][id.asSymbol]['index'];
 		}{
 			SynthDescLib.read(SynthDef.synthDefDir+/+defName.asString++".scsyndef");
