@@ -25,7 +25,7 @@ Proteus : UGen {
 			synthIndex = SynthDescLib.global[defName].metadata()[defName][id.asSymbol]['index'];
 		};
 
-		if (synthIndex == nil){
+		if (synthIndex.isNil){
 			"SynthDef has no metadata.\n".error;
 		};
 
