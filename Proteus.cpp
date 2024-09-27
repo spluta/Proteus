@@ -73,6 +73,10 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
 
     m_ratio = 44100. / sampleRate();
 
+    if(m_ratio > 1.05 || m_ratio < 0.95) {
+      m_resample = true;
+    }
+
     out_temp_size = int(44100./controlRate())+2; //an extra one for safety
 
     in_rs = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
@@ -90,11 +94,6 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
     src_state_out.reset (src_new (SRC_SINC_MEDIUM_QUALITY, 1, &error_out));
     src_set_ratio (src_state_out.get(), 1./m_ratio);
 
-    // //only need this for the 2 input case
-    // int error1;
-    // src_state1.reset (src_new (2, 2, &error1));
-    // src_set_ratio (src_state1.get(), m_ratio);
-
     mCalcFunc = make_calc_function<Proteus, &Proteus::next_a>();
     next_a(1);
   }
@@ -106,12 +105,15 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
 
   void load_model (Proteus* unit, sc_msg_iter* args) {
     const char *path = args->gets();
+    const bool verbose = args->geti();    
 
     try {
       unit->LSTM.reset();
       unit->LSTM.load_json(path);
       
-      Print("Load Proteus Model: %s\n", path);
+      if (verbose) {
+        Print("Proteus Model Loaded: %s\n", path);
+      }
       unit->m_model_loaded = true;
 
     } catch (const std::exception& e) {
@@ -136,30 +138,42 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
         }
       } else {
         //resample the input to 44.1kHz
-        int block44k_size = resample (in_0, in_rs, nSamples);
-        switch (LSTM.input_size) {
-          case 1: {
-            LSTM.process(in_rs, out_temp, block44k_size);
-            break;
+        if (m_resample) {
+
+          int block44k_size = resample (in_0, in_rs, nSamples);
+          switch (LSTM.input_size) {
+            case 1: {
+              LSTM.process(in_rs, out_temp, block44k_size);
+              break;
+            }
+            case 2: {
+
+              LSTM.process(in_rs, in_1, out_temp, block44k_size);
+              break;
+            }
+            case 3: {
+              //not implemented yet
+              break;
+            }
           }
-          case 2: {
-            // int temp = resample_1 (in_1, in1_rs, nSamples);
-            // //bad hack to make sure the second input is the same size as the first
-            // //probably need to use libsamplerate callback interface, but I'm not that smart
-            // if (temp < block44k_size) {
-            //   in1_rs[block44k_size-1] = in1_rs[block44k_size-2];
-            // }
-            LSTM.process(in_rs, in_1, out_temp, block44k_size);
-            break;
+          //resample the output back to the original sample rate and write to the output buffer
+          int block44k_size2 = resample_out (out_temp, outbuf, block44k_size, nSamples);
+        } else {
+          switch (LSTM.input_size) {
+            case 1: {
+              LSTM.process(in_0, outbuf, nSamples);
+              break;
+            }
+            case 2: {
+              LSTM.process(in_0, in_1, outbuf, nSamples);
+              break;
+            }
+            case 3: {
+              //not implemented yet
+              break;
+            }
           }
-          //so far there are no models that use 3 inputs
-          // case 3: {
-          //   LSTM.process(in_rs, in_1, in_2, outbuf, nSamples);
-          //   break;
-          // }
         }
-        //resample the output back to the original sample rate and write to the output buffer
-        int block44k_size2 = resample_out (out_temp, outbuf, block44k_size, nSamples);
       }
     } else {
       for (int i = 0; i < nSamples; ++i) {

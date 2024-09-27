@@ -49,6 +49,8 @@ private:
   float m_step_val{1.f/(float)sampleRate()};
   float m_sample_rate{(float)sampleRate()};
 
+  bool m_resample{false};
+
   int out_temp_size{128};
   float *in_rs;
   // float *in1_rs;

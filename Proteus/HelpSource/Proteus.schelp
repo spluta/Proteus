@@ -62,19 +62,24 @@ code::
 
 ~synth = Synth('proteus_test', [\buf_num, b]);
 
-//you need to download the Proteus models from the GuitarML website:
+//a couple of models are provided here, but for more of a good time
+//you need to download the Proteus models from the GuitarML website
 
 //load the model after the synth is running
+(
+    ~path = PathName(Proteus.filenameSymbol.asString).pathOnly++"example_models/";
 
-Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/WamplerThirtySomething15BoostON.json")
-
-Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/JoyoExtremeMetal.json")
+    Proteus.loadModel(~synth, \this_one, ~path++"WamplerThirtySomething15BoostON.json")
+)
+//load another
+Proteus.loadModel(~synth, \this_one, ~path++"JoyoExtremeMetal.json")
 
 //one can bypass the model or engage it
 ~synth.set(\bypass, 1);
 ~synth.set(\bypass, 0);
 
-Proteus.loadModel(~synth, \this_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/AmpPack3/Fender_Bassman_JC.json")
+//you can also load without posting to the screen
+Proteus.loadModel(~synth, \this_one, ~path++"Fender_Bassman_JC.json", false)
 
 ///--------------
 
@@ -89,7 +94,7 @@ SynthDef('proteus_multichannel', {
 ~synth = Synth('proteus_multichannel', [\buf_num, b]);
 
 //this will set both the left and right channels of audio
-Proteus.loadModel(~synth, \these_two, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/JoyoExtremeMetal.json")
+Proteus.loadModel(~synth, \these_two, ~path++"JoyoExtremeMetal.json")
 
 ///--------------
 
@@ -105,9 +110,8 @@ SynthDef('proteus_multi_ugen', {
 
 ~synth = Synth('proteus_multi_ugen', [\buf_num, b]);
 
-Proteus.loadModel(~synth, \first_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/JoyoExtremeMetal.json")
-Proteus.loadModel(~synth, \second_one, "/Users/spluta1/Downloads/Proteus_Tone_Packs/PedalPack4/JoyoExtremeMetal.json")
-
-
+~path = PathName(Proteus.filenameSymbol.asString).pathOnly++"example_models/";
+Proteus.loadModel(~synth, \first_one, ~path++"JoyoExtremeMetal.json");
+Proteus.loadModel(~synth, \second_one, ~path++"JoyoExtremeMetal.json");
 
 ::

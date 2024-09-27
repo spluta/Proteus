@@ -13,7 +13,7 @@ Proteus : UGen {
 		inputs = theInputs[1..];
 	}
 
-	*loadModel {|synth, id, path|
+	*loadModel {|synth, id, path, verbose = true|
 		//get the index from SynthDescLib
 		var defName = synth.defName.asSymbol;
 		var synthIndex = SynthDescLib.global[defName];
@@ -30,13 +30,21 @@ Proteus : UGen {
 		};
 
 		synthIndex.do{|index|
-			synth.server.sendMsg('/u_cmd', synth.nodeID, index, 'load_model', path);
+			synth.server.sendMsg('/u_cmd', synth.nodeID, index, 'load_model', path, verbose);
 		}
 	}
 
 	checkInputs {
 		/* TODO */
 		^this.checkValidInputs;
+	}
+
+	synthIndex_ { arg index;
+		if (this.desc.notNil) 
+		{ 
+			this.desc.index[this.desc.index.indexOf(synthIndex)]=index;
+		};
+		synthIndex = index;
 	}
 
 	optimizeGraph {
@@ -59,6 +67,7 @@ Proteus : UGen {
 			this.desc = ();
 			if (metadata[this.id.asSymbol]==nil){
 				//if the id info is not there, it is an additional id
+				"add to desc".postln;
 				this.desc[\index] = [this.synthIndex];
 			}{
 				//if the symbol is there, it is probably multichannel expansion
