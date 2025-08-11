@@ -8,7 +8,6 @@ Proteus : UGen {
 
 	init { arg ... theInputs;
 		this.id = theInputs[0];
-		theInputs.postln;
 		// store the inputs as an array
 		inputs = theInputs[1..];
 	}
@@ -67,7 +66,7 @@ Proteus : UGen {
 			this.desc = ();
 			if (metadata[this.id.asSymbol]==nil){
 				//if the id info is not there, it is an additional id
-				"add to desc".postln;
+				//"add to desc".postln;
 				this.desc[\index] = [this.synthIndex];
 			}{
 				//if the symbol is there, it is probably multichannel expansion
@@ -77,7 +76,7 @@ Proteus : UGen {
 		};
 
 		this.id.notNil.if {
-			metadata.put(this.id, this.desc);
+			metadata.put(this.id.asSymbol, this.desc);
 		}{
 			Error("Each Proteus instance in a Synth must have a unique ID.").throw;
 		};

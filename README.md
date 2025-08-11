@@ -47,7 +47,7 @@ make
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release -DSC_PATH=<PATH TO SC SOURCE> ..
-cmake --build . --config Release
+cmake --build . --config Release --target install
 ```
 
 for a mac universal build:

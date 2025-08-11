@@ -58,7 +58,7 @@ private:
 
   double m_ratio{1.0};
 
-  int m_bypass{1};
+  int m_bypass{0};
 };
 
 // } // namespace Proteus

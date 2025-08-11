@@ -5,7 +5,7 @@
 #include "Proteus.hpp"
 #include "SC_PlugIn.hpp"
 #include "SC_PlugIn.h"
-#include <nlohmann/json.hpp>
+#include <json.hpp>
 #include <string>
 #include "RTNeuralLSTM.cpp"
 #include "libsamplerate/include/samplerate.h"
@@ -132,7 +132,7 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
     float *outbuf = out(Out1);
 
     if (m_model_loaded==true) {
-      if ((int)bypass==1) {
+      if (bypass>0.99f) {
         for (int i = 0; i < nSamples; ++i) {
           outbuf[i] = in_0[i];
         }
