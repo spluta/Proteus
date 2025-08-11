@@ -124,17 +124,17 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create Release
-      if: steps.checkTag.outputs.exists == 'false' && matrix.os == 'macos-14'
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: 'Proteus Release ${{ github.ref }}'
-        draft: false
-        prerelease: false
+    # - name: Create Release
+    #   if: steps.checkTag.outputs.exists == 'false' && matrix.os == 'macos-14'
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     tag_name: ${{ github.ref }}
+    #     release_name: 'Proteus Release ${{ github.ref }}'
+    #     draft: false
+    #     prerelease: false
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
