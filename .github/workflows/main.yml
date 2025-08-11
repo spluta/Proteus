@@ -72,8 +72,8 @@ jobs:
     - name: Zip up build (Windows)
       if: matrix.os == 'windows-latest'
       shell: pwsh
-      working-directory: ${{github.workspace}}\build\Proteus
-      run: Compress-Archive -Path ${{github.workspace}}\build\Proteus -Destination "${{github.workspace}}/Proteus-${{runner.os}}.zip"
+      working-directory: ${{github.workspace}}\build
+      run: Compress-Archive -Path ${{github.workspace}}\build -Destination "${{github.workspace}}/Proteus-${{runner.os}}.zip"
 
   # upload SC binaries to release
 
@@ -114,7 +114,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{github.workspace}}/build/Proteus-mac_arm.zip
+        file: ${{github.workspace}}/Proteus-mac_arm.zip
         asset_name: Proteus-mac_arm.zip
         tag: ${{ github.ref }}
 
@@ -123,7 +123,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{github.workspace}}/build/Proteus-mac_intel.zip
+        file: ${{github.workspace}}/Proteus-mac_intel.zip
         asset_name: Proteus-mac_intel.zip
         tag: ${{ github.ref }}
 
