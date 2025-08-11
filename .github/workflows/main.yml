@@ -120,7 +120,7 @@ jobs:
       uses: mukunku/tag-exists-action@v1.6.0
       id: checkTag
       with:
-        tag: 'v1.0.0'
+        tag: ${{ github.ref }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -131,8 +131,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: 'v1.0.0'
-        release_name: 'Proteus Release v1.0.0'
+        tag_name: ${{ github.ref }}
+        release_name: 'Proteus Release ${{ github.ref }}'
         draft: false
         prerelease: false
 
@@ -142,7 +142,7 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ${{ github.workspace }}/${{ matrix.zip_name }}
         asset_name: ${{ matrix.zip_name }}
-        tag: 'v1.0.0'
+        tag: ${{ github.ref }}
         overwrite: true
 
 # name: sc-build
