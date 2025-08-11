@@ -5,133 +5,290 @@ on:
 
 jobs:
   build:
-
-    runs-on: ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14, macos-13]
+        include:
+          - os: macos-14
+            zip_name: Proteus-mac_arm.zip
+          - os: macos-13
+            zip_name: Proteus-mac_intel.zip
+          - os: windows-latest
+            zip_name: Proteus-windows.zip
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
     - name: Get SC source code
-      run: git clone https://github.com/supercollider/supercollider.git ${{github.workspace}}/supercollider
+      run: git clone https://github.com/supercollider/supercollider.git ${{ github.workspace }}/supercollider
 
-# for windows we have to explicitly add the libsamplerate build job here
-    - name: build_libsamplerate_win
+    - name: Build libsamplerate (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
       run: |
         cd libsamplerate
-        mkdir -p build && cd build && cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF ..
-        cmake --build . --config 'Release'
-        
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{github.workspace}}/build
+        mkdir build -Force
+        cd build
+        cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF ..
+        cmake --build . --config Release
 
-# Build the plugins
+    - name: Build libsamplerate (Unix)
+      if: matrix.os != 'windows-latest'
+      shell: bash
+      run: |
+        cd libsamplerate
+        mkdir -p build && cd build
+        cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF ..
+        cmake --build . --config Release
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{ github.workspace }}/build
 
     - name: Configure CMake (Unix)
-      shell: bash
       if: matrix.os != 'windows-latest'
-      working-directory: ${{github.workspace}}/build
-      run: cmake .. -DCMAKE_BUILD_TYPE='Release' -DSC_PATH=${{github.workspace}}/supercollider
+      shell: bash
+      working-directory: ${{ github.workspace }}/build
+      run: cmake .. -DCMAKE_BUILD_TYPE=Release -DSC_PATH=${{ github.workspace }}/supercollider
 
     - name: Configure CMake (Windows)
       if: matrix.os == 'windows-latest'
       shell: pwsh
-      working-directory: ${{github.workspace}}\build
-      run: cmake .. -DCMAKE_BUILD_TYPE='Release' -DSC_PATH=${{github.workspace}}\supercollider
+      working-directory: ${{ github.workspace }}/build
+      run: cmake .. -DCMAKE_BUILD_TYPE=Release -DSC_PATH="${{ github.workspace }}/supercollider"
 
     - name: Build (Unix)
       if: matrix.os != 'windows-latest'
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{ github.workspace }}/build
       shell: bash
-      run: cmake --build . --config "Release" --target install
+      run: cmake --build . --config Release --target install
 
     - name: Build (Windows)
-      working-directory: ${{github.workspace}}\build
+      if: matrix.os == 'windows-latest'
+      working-directory: ${{ github.workspace }}/build
+      shell: pwsh
+      run: cmake --build . --config Release --target install
+
+    - name: Debug - List build contents
+      shell: bash
+      run: |
+        echo "Contents of build directory:"
+        ls -la ${{ github.workspace }}/build/ || dir "${{ github.workspace }}/build/"
+        echo "Looking for Proteus folder:"
+        find ${{ github.workspace }}/build/ -name "Proteus*" -type d || echo "Proteus folder not found"
+
+    - name: Create zip (macOS)
+      if: startsWith(matrix.os, 'macos')
+      shell: bash
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        if [ -d "Proteus" ]; then
+          zip -r ${{ matrix.zip_name }} Proteus
+          mv ${{ matrix.zip_name }} ${{ github.workspace }}/
+        else
+          echo "Proteus directory not found!"
+          exit 1
+        fi
+
+    - name: Create zip (Windows)
       if: matrix.os == 'windows-latest'
       shell: pwsh
-      run: cmake --build . --config "Release" --target install
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        if (Test-Path "Proteus") {
+          Compress-Archive -Path "Proteus" -DestinationPath "${{ github.workspace }}/${{ matrix.zip_name }}"
+        } else {
+          Write-Error "Proteus directory not found!"
+          exit 1
+        }
 
-# Zip the SC plugins
-
-    - name: Zip up build (macOS-14)
-      if: matrix.os == 'macos-14'
+    - name: Verify zip file exists
       shell: bash
-      working-directory: ${{github.workspace}}/build
-      run: zip -r Proteus-mac_arm.zip Proteus
+      run: |
+        if [ -f "${{ github.workspace }}/${{ matrix.zip_name }}" ]; then
+          echo "✅ Zip file created successfully: ${{ matrix.zip_name }}"
+          ls -la "${{ github.workspace }}/${{ matrix.zip_name }}"
+        else
+          echo "❌ Zip file not found: ${{ matrix.zip_name }}"
+          echo "Files in workspace:"
+          ls -la ${{ github.workspace }}/
+          exit 1
+        fi
 
-    - name: Zip up build (macOS-13)
-      if: matrix.os == 'macos-13'
-      shell: bash
-      working-directory: ${{github.workspace}}/build
-      run: zip -r Proteus-mac_intel.zip Proteus 
-
-    - name: Zip up build (Windows)
-      if: matrix.os == 'windows-latest'
-      shell: pwsh
-      working-directory: ${{github.workspace}}\build
-      run: Compress-Archive -Path ${{github.workspace}}\build -Destination "${{github.workspace}}/Proteus-${{runner.os}}.zip"
-
-  # upload SC binaries to release
-
-    - name: Check if release has been created
+    - name: Check if release exists
       uses: mukunku/tag-exists-action@v1.6.0
       id: checkTag
       with:
-        tag: 'v1'
+        tag: 'v1.0.0'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create Release (macOS-14)
-      if: steps.checkTag.outputs.exists == false && matrix.os == 'macos-14'
-      id: create_release_arm
+    - name: Create Release
+      if: steps.checkTag.outputs.exists == 'false' && matrix.os == 'macos-14'
+      id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Proteus-arm-${{ github.ref }}
+        tag_name: 'v1.0.0'
+        release_name: 'Proteus Release v1.0.0'
         draft: false
         prerelease: false
 
-    - name: Create Release (macOS-13)
-      if: steps.checkTag.outputs.exists == false && matrix.os == 'macos-13'
-      id: create_release_x86
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Proteus-x86-${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Upload binaries to release (macOS-14)
-      if: matrix.os == 'macos-14'
+    - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{github.workspace}}/Proteus-mac_arm.zip
-        asset_name: Proteus-mac_arm.zip
-        tag: ${{ github.ref }}
+        file: ${{ github.workspace }}/${{ matrix.zip_name }}
+        asset_name: ${{ matrix.zip_name }}
+        tag: 'v1.0.0'
+        overwrite: true
 
-    - name: Upload binaries to release (macOS-13)
-      if: matrix.os == 'macos-13'
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{github.workspace}}/Proteus-mac_intel.zip
-        asset_name: Proteus-mac_intel.zip
-        tag: ${{ github.ref }}
+# name: sc-build
 
-    - name: Upload binaries to release (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ${{github.workspace}}/Proteus-${{runner.os}}.zip
-        asset_name: Proteus-${{runner.os}}.zip
-        tag: ${{ github.ref }}
+# on:
+#   workflow_dispatch:
+
+# jobs:
+#   build:
+
+#     runs-on: ${{matrix.os}}
+#     strategy:
+#       matrix:
+#         os: [macos-14, macos-13]
+
+#     steps:
+#     - uses: actions/checkout@v2
+#       with:
+#         submodules: 'recursive'
+
+#     - name: Get SC source code
+#       run: git clone https://github.com/supercollider/supercollider.git ${{github.workspace}}/supercollider
+
+# # for windows we have to explicitly add the libsamplerate build job here
+#     - name: build_libsamplerate_win
+#       run: |
+#         cd libsamplerate
+#         mkdir -p build && cd build && cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF ..
+#         cmake --build . --config 'Release'
+        
+#     - name: Create Build Environment
+#       run: cmake -E make_directory ${{github.workspace}}/build
+
+# # Build the plugins
+
+#     - name: Configure CMake (Unix)
+#       shell: bash
+#       if: matrix.os != 'windows-latest'
+#       working-directory: ${{github.workspace}}/build
+#       run: cmake .. -DCMAKE_BUILD_TYPE='Release' -DSC_PATH=${{github.workspace}}/supercollider
+
+#     - name: Configure CMake (Windows)
+#       if: matrix.os == 'windows-latest'
+#       shell: pwsh
+#       working-directory: ${{github.workspace}}\build
+#       run: cmake .. -DCMAKE_BUILD_TYPE='Release' -DSC_PATH=${{github.workspace}}\supercollider
+
+#     - name: Build (Unix)
+#       if: matrix.os != 'windows-latest'
+#       working-directory: ${{github.workspace}}/build
+#       shell: bash
+#       run: cmake --build . --config "Release" --target install
+
+#     - name: Build (Windows)
+#       working-directory: ${{github.workspace}}\build
+#       if: matrix.os == 'windows-latest'
+#       shell: pwsh
+#       run: cmake --build . --config "Release" --target install
+
+# # Zip the SC plugins
+
+#     - name: Zip up build (macOS-14)
+#       if: matrix.os == 'macos-14'
+#       shell: bash
+#       working-directory: ${{github.workspace}}/build
+#       run: zip -r Proteus-mac_arm.zip Proteus
+
+#     - name: Zip up build (macOS-13)
+#       if: matrix.os == 'macos-13'
+#       shell: bash
+#       working-directory: ${{github.workspace}}/build
+#       run: zip -r Proteus-mac_intel.zip Proteus 
+
+#     - name: Zip up build (Windows)
+#       if: matrix.os == 'windows-latest'
+#       shell: pwsh
+#       working-directory: ${{github.workspace}}\build
+#       run: Compress-Archive -Path ${{github.workspace}}\build -Destination "${{github.workspace}}/Proteus-${{runner.os}}.zip"
+
+#   # upload SC binaries to release
+
+#     - name: Check if release has been created
+#       uses: mukunku/tag-exists-action@v1.6.0
+#       id: checkTag
+#       with:
+#         tag: 'v1'
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#     - name: Debug - List files
+#       shell: bash
+#       run: |
+#         echo "Current directory:"
+#         pwd
+#         echo "Files in workspace:"
+#         ls -la ${{github.workspace}}/
+#         echo "Files in build directory:"
+#         ls -la ${{github.workspace}}/build/ || echo "Build directory not found"
+
+#     - name: Create Release (macOS-14)
+#       if: steps.checkTag.outputs.exists == false && matrix.os == 'macos-14'
+#       id: create_release_arm
+#       uses: actions/create-release@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         tag_name: ${{ github.ref }}
+#         release_name: Proteus-arm-${{ github.ref }}
+#         draft: false
+#         prerelease: false
+
+#     - name: Create Release (macOS-13)
+#       if: steps.checkTag.outputs.exists == false && matrix.os == 'macos-13'
+#       id: create_release_x86
+#       uses: actions/create-release@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         tag_name: ${{ github.ref }}
+#         release_name: Proteus-x86-${{ github.ref }}
+#         draft: false
+#         prerelease: false
+
+#     - name: Upload binaries to release (macOS-14)
+#       if: matrix.os == 'macos-14'
+#       uses: svenstaro/upload-release-action@v2
+#       with:
+#         repo_token: ${{ secrets.GITHUB_TOKEN }}
+#         file: ${{github.workspace}}/build/Proteus-mac_arm.zip
+#         asset_name: Proteus-mac_arm.zip
+#         tag: ${{ github.ref }}
+
+#     - name: Upload binaries to release (macOS-13)
+#       if: matrix.os == 'macos-13'
+#       uses: svenstaro/upload-release-action@v2
+#       with:
+#         repo_token: ${{ secrets.GITHUB_TOKEN }}
+#         file: ${{github.workspace}}/build/Proteus-mac_intel.zip
+#         asset_name: Proteus-mac_intel.zip
+#         tag: ${{ github.ref }}
+
+#     - name: Upload binaries to release (Windows)
+#       if: matrix.os == 'windows-latest'
+#       uses: svenstaro/upload-release-action@v2
+#       with:
+#         repo_token: ${{ secrets.GITHUB_TOKEN }}
+#         file: ${{github.workspace}}/Proteus-${{runner.os}}.zip
+#         asset_name: Proteus-${{runner.os}}.zip
+#         tag: ${{ github.ref }}
