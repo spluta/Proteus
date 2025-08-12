@@ -59,7 +59,7 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
       m_resample = true;
     }
 
-    out_temp_size = int(ceil(nn_sample_rate/controlRate()); //an extra one for safety
+    out_temp_size = int(ceil(44100.f/controlRate())) + 1; //an extra one for safety
 
     in_rs = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
     out_temp = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));

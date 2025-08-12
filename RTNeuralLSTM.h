@@ -2,10 +2,11 @@
 
 #include <RTNeural/RTNeural.h>
 
+
 class RT_LSTM
 {
 public:
-    RT_LSTM() = default;
+    //RT_LSTM() = default;
 
     void reset();
     void load_json(const char* filename);
