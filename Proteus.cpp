@@ -31,24 +31,6 @@ size_t Proteus::resample (const float* input, float* output, size_t numSamples) 
     return (size_t) src_data.output_frames_gen;
 }
 
-// size_t Proteus::resample_1 (const float* input, float* output, size_t numSamples) noexcept
-// {
-//     SRC_DATA src_data {
-//         input, // data_in
-//         output, // data_out
-//         (int) numSamples, // input_frames
-//         int ((double) numSamples * m_ratio) + 1, // output_frames
-//         0, // input_frames_used
-//         0, // output_frames_gen
-//         0, // end_of_input
-//         m_ratio // src_ratio
-//     };
-
-//     src_process (src_state.get(), &src_data);
-
-//     return (size_t) src_data.output_frames_gen;
-// }
-
 size_t Proteus::resample_out (const float* input, float* output, size_t inSamples, size_t outSamples) noexcept
 {
     SRC_DATA src_data {
@@ -77,21 +59,19 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
       m_resample = true;
     }
 
-    out_temp_size = int(44100./controlRate())+2; //an extra one for safety
+    out_temp_size = int(ceil(nn_sample_rate/controlRate()); //an extra one for safety
 
     in_rs = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
-    //in1_rs = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
     out_temp = (float*)RTAlloc(mWorld, (double)out_temp_size * sizeof(float));
 
 
     //setting these to medium quality sample rate conversion
     //probably could be "fastest"
     int error;
-    src_state.reset (src_new (SRC_SINC_MEDIUM_QUALITY, 1, &error));
-    src_set_ratio (src_state.get(), m_ratio);
-
     int error_out;
+    src_state.reset (src_new (SRC_SINC_MEDIUM_QUALITY, 1, &error));
     src_state_out.reset (src_new (SRC_SINC_MEDIUM_QUALITY, 1, &error_out));
+    src_set_ratio (src_state.get(), m_ratio);
     src_set_ratio (src_state_out.get(), 1./m_ratio);
 
     mCalcFunc = make_calc_function<Proteus, &Proteus::next_a>();
@@ -99,7 +79,6 @@ size_t Proteus::resample_out (const float* input, float* output, size_t inSample
   }
   Proteus::~Proteus() {
     RTFree(mWorld, in_rs);
-    //RTFree(mWorld, in1_rs);
     RTFree(mWorld, out_temp);
   }
 

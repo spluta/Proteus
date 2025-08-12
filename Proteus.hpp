@@ -28,7 +28,7 @@ private:
   void load_model(Proteus* unit, sc_msg_iter* args);
 
   size_t resample (const float* input, float* output, size_t numSamples) noexcept;
-  size_t resample_1 (const float* input, float* output, size_t inSamples) noexcept;
+  //size_t resample_1 (const float* input, float* output, size_t inSamples) noexcept;
   size_t resample_out (const float* input, float* output, size_t inSamples, size_t outSamples) noexcept;
 
   //create a pointer to the SRC_STATE struct, which we will use to manage the sample rate conversion
